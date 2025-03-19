@@ -6,9 +6,9 @@ name: OpenBlink Extension CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -30,7 +30,7 @@ jobs:
     - run: npm ci
     - run: npm install -g vsce
     - run: npm run vscode:prepublish
-    - run: vsce package
+    # - run: vsce package
 
     - name: Publish to Open VSX Registry
       uses: HaaLeo/publish-vscode-extension@v2
