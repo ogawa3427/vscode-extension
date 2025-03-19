@@ -1,0 +1,94 @@
+{
+  "name": "open-blink-vscode-extension",
+  "displayName": "Open Blink VSCode Extension",
+  "description": "A VSCode extension for Open Blink",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OpenBlink/vscode-extension"
+  },
+  "publisher": "OpenBlink",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "open-blink-vscode-extension.connectDevice",
+        "title": "Open Blink: Connect Device"
+      },
+      {
+        "command": "open-blink-vscode-extension.compileAndBlink",
+        "title": "Open Blink: Compile and Blink"
+      },
+      {
+        "command": "open-blink-vscode-extension.softReset",
+        "title": "Open Blink: Soft Reset"
+      },
+      {
+        "command": "open-blink-vscode-extension.disconnectDevice",
+        "title": "Open Blink: Disconnect Device"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "open-blink-explorer",
+          "title": "Open Blink",
+          "icon": "resources/blink.svg"
+        }
+      ]
+    },
+    "views": {
+      "open-blink-explorer": [
+        {
+          "id": "open-blink-actions",
+          "name": "Open Blink Tasks",
+          "type": "tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": []
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npm run copy-resources",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "copy-resources": "copyfiles -u 1 resources/mrbc.wasm resources/mrbc.js out/",
+    "build": "npm run compile",
+    "ci": "npm run vscode:prepublish && vsce package"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/noble": "^0.0.44",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.96.0",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "copyfiles": "^2.4.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.21.0",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-26",
+    "noble-winrt": "^0.1.0",
+    "vsce": "^2.15.0",
+    "yo": "^5.1.0"
+  }
+}
