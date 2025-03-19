@@ -36,9 +36,9 @@ jobs:
     - name: Prepare Artifacts
       run: |
         mkdir -p platform-bin
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+        if ($env:RUNNER_OS -eq "Windows") {
           cp node_modules/@abandonware/noble/build/Release/noble.node platform-bin/noble-win32.node
-        else
+        } else {
           cp node_modules/@abandonware/noble/build/Release/noble.node platform-bin/noble-darwin.node
         fi
         
