@@ -22,11 +22,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install Visual Studio C++ Build Tools
-      uses: microsoft/setup-msbuild@v1.3.1
+    - name: Install Visual Studio Build Tools
+      uses: microsoft/setup-msbuild@v2
       
     - name: Install Visual Studio C++ Desktop Development
-      uses: microsoft/vs-setup-action@v1
+      uses: microsoft/setup-msbuild@v2
       with:
         components: Microsoft.VisualStudio.Component.VC.Tools.x86.x64
         workload: Microsoft.VisualStudio.Workload.VCTools
