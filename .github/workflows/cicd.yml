@@ -12,8 +12,7 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     strategy:
       matrix:
@@ -22,15 +21,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Install Visual Studio C++ Build Tools
+      uses: microsoft/setup-msbuild@v1.3.1
+      
+    - name: Install Visual Studio C++ Desktop Development
+      uses: microsoft/vs-setup-action@v1
+      with:
+        components: Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+        workload: Microsoft.VisualStudio.Workload.VCTools
+        includeRecommended: true
+        includeOptional: true
+        
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y libsecret-1-dev
         
     - run: npm ci
     - run: npm install -g vsce
@@ -48,7 +55,6 @@ jobs:
         pat: ${{ secrets.AZURE_PAT }}
         registryUrl: https://marketplace.visualstudio.com
 
-    # おわり
     - name: End of workflow
       run: echo "End of workflow" 
 
