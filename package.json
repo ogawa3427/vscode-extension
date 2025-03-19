@@ -70,8 +70,7 @@
     "copy-resources": "copyfiles -u 1 resources/mrbc.wasm resources/mrbc.js out/",
     "build": "npm run compile",
     "ci": "npm run vscode:prepublish && vsce package",
-    "rebuild": "npm rebuild --update-binary",
-    "postinstall": "npm run rebuild"
+    "rebuild": "npm rebuild --update-binary"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
