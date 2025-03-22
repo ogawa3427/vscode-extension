@@ -1,7 +1,7 @@
 {
-  "name": "open-blink-vscode-extension",
-  "displayName": "Open Blink VSCode Extension",
-  "description": "A VSCode extension for Open Blink",
+  "name": "open-blink-vscode-extension-for-windows",
+  "displayName": "Open Blink VSCode Extension for Windows",
+  "description": "A VSCode extension for Open Blink, Mac version is also available",
   "version": "0.1.1",
   "engines": {
     "vscode": "^1.96.0"
@@ -9,7 +9,7 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OpenBlink/vscode-extension"
+    "url": "https://github.com/OpenBlink/openblink-vscode-extension"
   },
   "publisher": "OpenBlink",
   "categories": [
