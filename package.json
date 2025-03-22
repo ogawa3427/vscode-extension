@@ -88,7 +88,6 @@
   "dependencies": {
     "@abandonware/noble": "^1.9.2-26",
     "noble-winrt": "^0.1.0",
-    "vsce": "^2.15.0",
     "yo": "^5.1.0"
   }
 }
