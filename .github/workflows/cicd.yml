@@ -38,7 +38,7 @@ jobs:
 
     - name: Identify OS
       if: matrix.os == 'windows-latest'
-      run: echo "windows!!!!!!!!!!!!!!!!!!!!"
+      run: echo "windows!!!!!!!!!!!!!!!!!!!!" && rm -rf node_modules
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
