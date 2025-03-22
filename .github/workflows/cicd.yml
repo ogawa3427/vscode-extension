@@ -55,7 +55,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       uses: HaaLeo/publish-vscode-extension@v2
       with:
-        pat: ${{ secrets.OPEN_VSX }}
+        pat: ${{ secrets.OPEN_VSX_PAT }}
 
     - name: Publish to Visual Studio Marketplace(win)
       if: matrix.os == 'windows-latest'
@@ -75,7 +75,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       uses: HaaLeo/publish-vscode-extension@v2
       with:
-        pat: ${{ secrets.AZURE_PAT_MAC }}
+        pat: ${{ secrets.AZURE_PAT }}
         registryUrl: https://marketplace.visualstudio.com
 
     - name: End of workflow
