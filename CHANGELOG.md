@@ -6,16 +6,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-## [0.1.1] - 2024-03-21
+## [0.1.2] - 2025-03-22
 
 ### Added
-- Added support for Windows environment
-- Added build from source option for Mac users
+- Added support for Mac environment
 
 ### Changed
-- Optimized performance for Windows environment
 
 ### Note
-- Mac users are recommended to build from source until the official release
-
-- Initial release
