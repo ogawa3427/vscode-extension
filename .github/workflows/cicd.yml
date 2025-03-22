@@ -46,7 +46,7 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: node package_mod.js
         
-    - run: npm ci
+    - run: npm install
     - run: npm install -g vsce
     - run: npm run vscode:prepublish
     # - run: vsce package
