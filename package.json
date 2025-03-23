@@ -38,6 +38,14 @@
         "title": "Open Blink: Disconnect Device"
       }
     ],
+    "keybindings": [
+      {
+        "command": "open-blink-vscode-extension.compileAndBlink",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "editorTextFocus"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {

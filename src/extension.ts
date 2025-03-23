@@ -16,8 +16,10 @@ const PROGRAM_HEADER_SIZE = 8;
 const OPENBLINK_WEBIDE_VERSION = "0.3.3";
 
 const OPENBLINK_SERVICE_UUID = "227da52ce13a412bbefbba2256bb7fbe";
-const OPENBLINK_CONSOLE_CHARACTERISTIC_UUID = "a015b3de185a4252aa047a87d38ce148";
-const OPENBLINK_PROGRAM_CHARACTERISTIC_UUID = "ad9fdd5611354a84923cce5a244385e7";
+const OPENBLINK_CONSOLE_CHARACTERISTIC_UUID =
+  "a015b3de185a4252aa047a87d38ce148";
+const OPENBLINK_PROGRAM_CHARACTERISTIC_UUID =
+  "ad9fdd5611354a84923cce5a244385e7";
 const OPENBLINK_MTU_CHARACTERISTIC_UUID = "ca1411513113448bb21a6a6203d253ff";
 
 // BLE接続状態
@@ -133,10 +135,16 @@ type EmscriptenModule = {
   [key: string]: any;
 };
 
-class OpenBlinkActionsViewProvider implements vscode.TreeDataProvider<BlinkTreeItem> {
+class OpenBlinkActionsViewProvider
+  implements vscode.TreeDataProvider<BlinkTreeItem>
+{
   public static readonly viewType = "open-blink-actions";
-  private _onDidChangeTreeData: vscode.EventEmitter<BlinkTreeItem | undefined | null | void> = new vscode.EventEmitter<BlinkTreeItem | undefined | null | void>();
-  readonly onDidChangeTreeData: vscode.Event<BlinkTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+  private _onDidChangeTreeData: vscode.EventEmitter<
+    BlinkTreeItem | undefined | null | void
+  > = new vscode.EventEmitter<BlinkTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<
+    BlinkTreeItem | undefined | null | void
+  > = this._onDidChangeTreeData.event;
   private outputChannel: vscode.OutputChannel;
   private foundDevices: noble.Peripheral[] = [];
 
@@ -161,61 +169,61 @@ class OpenBlinkActionsViewProvider implements vscode.TreeDataProvider<BlinkTreeI
     if (!element) {
       // ルートレベルのアイテム
       const items: BlinkTreeItem[] = [];
-      
+
       // デバイス接続ボタン
-      items.push(new BlinkTreeItem(
-        'Connect Device',
-        vscode.TreeItemCollapsibleState.None,
-        {
-          command: 'open-blink-vscode-extension.connectDevice',
-          title: 'Connect Device'
-        }
-      ));
-
-      // コンパイルと書き込みボタン
-      items.push(new BlinkTreeItem(
-        'Compile and Blink',
-        vscode.TreeItemCollapsibleState.None,
-        {
-          command: 'open-blink-vscode-extension.compileAndBlink',
-          title: 'Compile and Blink'
-        }
-      ));
-
-      // ソフトリセットボタン
-      items.push(new BlinkTreeItem(
-        'Soft Reset',
-        vscode.TreeItemCollapsibleState.None,
-        {
-          command: 'open-blink-vscode-extension.softReset',
-          title: 'Soft Reset'
-        }
-      ));
-
-      // デバイス切断ボタン
-      items.push(new BlinkTreeItem(
-        'Disconnect Device',
-        vscode.TreeItemCollapsibleState.None,
-        {
-          command: 'open-blink-vscode-extension.disconnectDevice',
-          title: 'Disconnect Device'
-        }
-      ));
-
-      return items;
-    } else if (element.label === 'Found Devices') {
-      // 検出されたデバイスのリストを表示
-      return this.foundDevices.map(device => {
-        const label = device.advertisement.localName || 'Unknown Device';
-        return new BlinkTreeItem(
-          label,
+      items.push(
+        new BlinkTreeItem(
+          "Connect Device",
           vscode.TreeItemCollapsibleState.None,
           {
-            command: 'open-blink-vscode-extension.connectToDevice',
-            title: 'Connect to Device',
-            arguments: [device]
+            command: "open-blink-vscode-extension.connectDevice",
+            title: "Connect Device",
           }
-        );
+        )
+      );
+
+      // コンパイルと書き込みボタン
+      items.push(
+        new BlinkTreeItem(
+          "Compile and Blink",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "open-blink-vscode-extension.compileAndBlink",
+            title: "Compile and Blink",
+          }
+        )
+      );
+
+      // ソフトリセットボタン
+      items.push(
+        new BlinkTreeItem("Soft Reset", vscode.TreeItemCollapsibleState.None, {
+          command: "open-blink-vscode-extension.softReset",
+          title: "Soft Reset",
+        })
+      );
+
+      // デバイス切断ボタン
+      items.push(
+        new BlinkTreeItem(
+          "Disconnect Device",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "open-blink-vscode-extension.disconnectDevice",
+            title: "Disconnect Device",
+          }
+        )
+      );
+
+      return items;
+    } else if (element.label === "Found Devices") {
+      // 検出されたデバイスのリストを表示
+      return this.foundDevices.map((device) => {
+        const label = device.advertisement.localName || "Unknown Device";
+        return new BlinkTreeItem(label, vscode.TreeItemCollapsibleState.None, {
+          command: "open-blink-vscode-extension.connectToDevice",
+          title: "Connect to Device",
+          arguments: [device],
+        });
       });
     }
     return [];
@@ -241,14 +249,16 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // ステータスバーアイテムの初期化
-  statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+  statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Left
+  );
   statusBarItem.text = "$(circle-slash)";
   statusBarItem.tooltip = "Not Connected to Blink Device";
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
   const actionsProvider = new OpenBlinkActionsViewProvider(outputChannel);
-  
+
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider(
       OpenBlinkActionsViewProvider.viewType,
@@ -403,8 +413,7 @@ export function activate(context: vscode.ExtensionContext) {
                       // OpenBlinkのサービスUUIDを検索
                       const openBlinkService = services.find(
                         (s) =>
-                          s.uuid.replace(/-/g, "") ===
-                          OPENBLINK_SERVICE_UUID
+                          s.uuid.replace(/-/g, "") === OPENBLINK_SERVICE_UUID
                       ) as NobleService;
 
                       if (!openBlinkService) {
@@ -555,10 +564,9 @@ export function activate(context: vscode.ExtensionContext) {
 
                       // 接続成功時のステータス更新
                       statusBarItem.text = "$(check)";
-                      statusBarItem.tooltip = lastCompileTime ? 
-                        `Connected to ${selected.label} (Last compile: ${lastCompileTime}ms)` : 
-                        `Connected to ${selected.label}`;
-
+                      statusBarItem.tooltip = lastCompileTime
+                        ? `Connected to ${selected.label} (Last compile: ${lastCompileTime}ms)`
+                        : `Connected to ${selected.label}`;
                     } catch (error) {
                       const errorMessage =
                         error instanceof Error
@@ -721,7 +729,13 @@ export function activate(context: vscode.ExtensionContext) {
           try {
             await vscode.workspace.fs.stat(filePath);
           } catch {
-            throw new Error(`Required file (${filePath.fsPath}) not found`);
+            if (filePath === appRbPath) {
+              throw new Error(
+                "app.rb not found. app.rb is required at the root of the workspace."
+              );
+            } else {
+              throw new Error(`Required file (${filePath.fsPath}) not found`);
+            }
           }
         }
 
@@ -1041,7 +1055,7 @@ export function activate(context: vscode.ExtensionContext) {
           const end_send = performance.now();
           const compileDuration = Math.round(end_send - startTime);
           lastCompileTime = compileDuration;
-          
+
           outputChannel.appendLine(
             `Firmware transfer completed! (${compileDuration}ms)`
           );
@@ -1050,7 +1064,6 @@ export function activate(context: vscode.ExtensionContext) {
           // 完了時のステータス更新
           statusBarItem.text = `$(check) ${compileDuration}ms`;
           statusBarItem.tooltip = `Connected and Ready (Last compile: ${compileDuration}ms)`;
-
         } catch (error) {
           const errorMessage =
             error instanceof Error
@@ -1148,7 +1161,7 @@ export function activate(context: vscode.ExtensionContext) {
     connectDevice,
     compileAndBlink,
     softReset,
-    disconnectDevice//,
+    disconnectDevice //,
     // helloWorld
   );
 }
