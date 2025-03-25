@@ -80,6 +80,7 @@ BSD-3-Clause
 git clone https://github.com/OpenBlink/vscode-extension.git
 cd vscode-extension
 npm install
+npm -g install yo
 ```
 
 ## 未来工作
