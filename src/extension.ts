@@ -33,6 +33,30 @@ let negotiatedMTU = DEFAULT_MTU;
 let statusBarItem: vscode.StatusBarItem;
 let lastCompileTime: number | null = null;
 
+// 設定を読み込む関数
+function loadKeybindingConfig(): string {
+  const config = vscode.workspace.getConfiguration('open-blink-vscode-extension');
+  return config.get('keybindings.compileAndBlink') || 'ctrl+s';
+}
+
+// 設定変更を監視
+function setupConfigChangeListener(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('open-blink-vscode-extension.keybindings.compileAndBlink')) {
+        const newKeybinding = loadKeybindingConfig();
+        if (newKeybinding === '') {
+          // キーバインドを無効化
+          vscode.commands.executeCommand('workbench.action.removeKeybinding', 'open-blink-vscode-extension.compileAndBlink');
+        } else {
+          // 新しいキーバインドを設定
+          vscode.commands.executeCommand('workbench.action.addKeybinding', 'open-blink-vscode-extension.compileAndBlink', newKeybinding);
+        }
+      }
+    })
+  );
+}
+
 // BLE書き込み関数
 async function writeCharacteristic(
   characteristic: NobleCharacteristic,
@@ -243,6 +267,16 @@ class BlinkTreeItem extends vscode.TreeItem {
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
   const outputChannel = vscode.window.createOutputChannel("Open Blink");
+  
+  // 設定変更の監視を開始
+  setupConfigChangeListener(context);
+  
+  // 初期設定を読み込む
+  const initialKeybinding = loadKeybindingConfig();
+  if (initialKeybinding === '') {
+    vscode.commands.executeCommand('workbench.action.removeKeybinding', 'open-blink-vscode-extension.compileAndBlink');
+  }
+
   outputChannel.show();
   outputChannel.appendLine(
     `OpenBlink WebIDE v${OPENBLINK_WEBIDE_VERSION} started.`

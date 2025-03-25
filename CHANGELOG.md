@@ -6,10 +6,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-## [0.1.2] - 2025-03-22
+## [0.1.3] - 2025-03-25
 
 ### Added
-- Added support for Mac environment
+- Keybinding for compile and blink command
 
 ### Changed
 
