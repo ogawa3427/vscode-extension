@@ -80,7 +80,7 @@ Coming soon...
 git clone https://github.com/OpenBlink/vscode-extension.git
 cd vscode-extension
 npm install
-npm -g install yo
+npm -g install yo vsce
 ```
 
 ## Future Work
