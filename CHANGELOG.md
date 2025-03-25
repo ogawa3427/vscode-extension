@@ -6,11 +6,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-## [0.1.3] - 2025-03-25
+## [0.1.4] - 2025-03-25
 
 ### Added
-- Keybinding for compile and blink command
 
 ### Changed
+- Dependencies updated
 
 ### Note
