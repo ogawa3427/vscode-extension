@@ -88,23 +88,20 @@ async function writeCharacteristic(
   }
 }
 
-// CRC16計算関数
-function crc16_reflect(crc: number, bitnum: number, data: Uint8Array): number {
-  let crcout = crc;
-  for (let i = 0; i < data.length; i++) {
-    let c = data[i];
-    for (let j = 0x80; j; j >>= 1) {
-      let bit = crcout & 0x8000;
-      crcout <<= 1;
-      if (c & j) {
-        crcout |= 1;
-      }
-      if (bit) {
-        crcout ^= 0x1021;
-      }
+// CRC16計算関数を修正
+function crc16_reflect(poly: number, seed: number, data: Uint8Array): number {
+    let crc = seed;
+    for (let i = 0; i < data.length; i++) {
+        crc ^= data[i];
+        for (let j = 0; j < 8; j++) {
+            if (crc & 0x0001) {
+                crc = (crc >>> 1) ^ poly;
+            } else {
+                crc = crc >>> 1;
+            }
+        }
     }
-  }
-  return crcout;
+    return crc & 0xffff;
 }
 
 // nobleの型定義を拡張
@@ -789,6 +786,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
           }
         }
+        await vscode.commands.executeCommand('workbench.action.files.save');
 
         // app.rbの内容を読み取り
         const fileContent = await vscode.workspace.fs.readFile(appRbPath);
@@ -1010,30 +1008,51 @@ export function activate(context: vscode.ExtensionContext) {
             try {
               negotiatedMTU = await currentDevice.gatt.requestMTU(
                 REQUESTED_MTU
-              );
+              ) - 3;
               outputChannel.appendLine(
                 `MTU negotiation successful: ${negotiatedMTU}`
               );
             } catch (error) {
               outputChannel.appendLine(`Using default MTU: ${DEFAULT_MTU}`);
               negotiatedMTU = DEFAULT_MTU;
+              if (error instanceof Error) {
+                outputChannel.appendLine(error.message);
+              }
             }
           } else if (negotiatedMtuCharacteristic) {
             try {
-              const valueDataView =
-                await negotiatedMtuCharacteristic.readAsync();
+              const timeoutPromise = new Promise<DataView>((_, reject) => {
+                setTimeout(() => reject(new Error("MTU characteristic read timeout")), 5000);
+              });
+              
+              const valueDataView = await Promise.race([
+                negotiatedMtuCharacteristic.readAsync(),
+                timeoutPromise
+              ]);
+              
               if (valueDataView instanceof DataView) {
                 const devicemtu = valueDataView.getUint16(0, true);
                 negotiatedMTU = devicemtu - 3;
-                outputChannel.appendLine(
-                  `Device negotiation MTU: ${devicemtu}`
-                );
+                outputChannel.appendLine(`Device negotiation MTU: ${devicemtu}`);
+              } else if (typeof valueDataView === 'object') {
+                // Bufferオブジェクトの場合の処理
+                const buffer = valueDataView as Buffer;
+                // リトルエンディアンで2バイトを読み取る
+                const devicemtu = (buffer[1] << 8) | buffer[0];
+                negotiatedMTU = devicemtu - 3;
+                outputChannel.appendLine(`Device negotiation MTU (from Buffer): ${devicemtu}`);
+                outputChannel.appendLine(`Buffer data: ${JSON.stringify(buffer)}`);
               } else {
-                throw new Error("Invalid data format received from device");
+                outputChannel.appendLine(`Received data type: ${typeof valueDataView}`);
+                outputChannel.appendLine(`Received data: ${JSON.stringify(valueDataView)}`);
+                throw new Error(`Invalid data format received from device. Expected DataView or Buffer, got ${typeof valueDataView}`);
               }
             } catch (error) {
               outputChannel.appendLine(`Using default MTU: ${DEFAULT_MTU}`);
               negotiatedMTU = DEFAULT_MTU;
+              if (error instanceof Error) {
+                outputChannel.appendLine(error.message);
+              }
             }
           }
 
@@ -1043,9 +1062,7 @@ export function activate(context: vscode.ExtensionContext) {
           const slot = 2;
 
           outputChannel.appendLine(
-            `Starting transfer: slot=${slot}, size=${contentLength}bytes, CRC16=${crc16.toString(
-              16
-            )}, MTU=${negotiatedMTU}`
+            `Starting transfer: slot=${slot}, size=${contentLength}bytes, CRC16=${crc16.toString(16)}, MTU=${negotiatedMTU}`
           );
 
           // データチャンクの送信
@@ -1075,10 +1092,23 @@ export function activate(context: vscode.ExtensionContext) {
               compiledBinary.subarray(offset, offset + chunkDataSize)
             );
 
-            await writeCharacteristic(programCharacteristic, buffer);
-            outputChannel.appendLine(
-              `Data transfer completed: Offset=${offset}, Size=${chunkDataSize}`
-            );
+            try {
+              const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("Data chunk transfer timeout")), 5000);
+              });
+              
+              await Promise.race([
+                writeCharacteristic(programCharacteristic, buffer),
+                timeoutPromise
+              ]);
+              
+              outputChannel.appendLine(
+                `Data transfer completed: Offset=${offset}, Size=${chunkDataSize}`
+              );
+            } catch (error) {
+              outputChannel.appendLine(`Data chunk transfer failed: ${error}`);
+              throw error;
+            }
           }
 
           // プログラムヘッダーの送信
@@ -1226,22 +1256,63 @@ async function negotiateMTU(
 ) {
   try {
     if (device.gatt?.requestMTU) {
-      negotiatedMTU = await device.gatt.requestMTU(REQUESTED_MTU);
-      outputChannel.appendLine(`MTU negotiation successful: ${negotiatedMTU}`);
-    } else if (negotiatedMtuCharacteristic) {
+      outputChannel.appendLine("MTU negotiation 1");
+      const timeoutPromise = new Promise<number>((_, reject) => {
+        setTimeout(() => reject(new Error("MTU negotiation timeout")), 5000);
+      });
+      
       try {
-        const valueDataView = await negotiatedMtuCharacteristic.readAsync();
+        negotiatedMTU = await Promise.race([
+          device.gatt.requestMTU(REQUESTED_MTU),
+          timeoutPromise
+        ]);
+        outputChannel.appendLine(`MTU negotiation successful: ${negotiatedMTU}`);
+      } catch (error) {
+        outputChannel.appendLine(`MTU negotiation failed: ${error}`);
+        negotiatedMTU = DEFAULT_MTU;
+        if (error instanceof Error) {
+          outputChannel.appendLine(error.message);
+        }
+      }
+    } else if (negotiatedMtuCharacteristic) {
+      outputChannel.appendLine("MTU characteristic negotiation 2");
+      try {
+        const timeoutPromise = new Promise<DataView>((_, reject) => {
+          setTimeout(() => reject(new Error("MTU characteristic read timeout")), 5000);
+        });
+        
+        const valueDataView = await Promise.race([
+          negotiatedMtuCharacteristic.readAsync(),
+          timeoutPromise
+        ]);
+        
         if (valueDataView instanceof DataView) {
           const devicemtu = valueDataView.getUint16(0, true);
           negotiatedMTU = devicemtu - 3;
           outputChannel.appendLine(`Device negotiation MTU: ${devicemtu}`);
+        } else if (typeof valueDataView === 'object') {
+          // Bufferオブジェクトの場合の処理
+          const buffer = valueDataView as Buffer;
+          // リトルエンディアンで2バイトを読み取る
+          const devicemtu = (buffer[1] << 8) | buffer[0];
+          negotiatedMTU = devicemtu - 3;
+          outputChannel.appendLine(`Device negotiation MTU (from Buffer): ${devicemtu}`);
+          outputChannel.appendLine(`Buffer data: ${JSON.stringify(buffer)}`);
         } else {
-          throw new Error("Invalid data format received from device");
+          outputChannel.appendLine(`Received data type: ${typeof valueDataView}`);
+          outputChannel.appendLine(`Received data: ${JSON.stringify(valueDataView)}`);
+          throw new Error(`Invalid data format received from device. Expected DataView or Buffer, got ${typeof valueDataView}`);
         }
       } catch (error) {
         outputChannel.appendLine(`Using default MTU: ${DEFAULT_MTU}`);
         negotiatedMTU = DEFAULT_MTU;
+        if (error instanceof Error) {
+          outputChannel.appendLine(error.message);
+        }
       }
+    }
+    else {
+      outputChannel.appendLine("No MTU negotiation3");
     }
   } catch (error) {
     outputChannel.appendLine(`MTU negotiation error: ${error}`);

@@ -6,11 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-## [0.1.4] - 2025-03-25
+## [0.1.5] - 2025-03-27
 
 ### Added
 
 ### Changed
-- Dependencies updated
+- CRC calculation method fixed
 
 ### Note
+- Last Test Version
