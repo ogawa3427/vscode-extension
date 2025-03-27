@@ -2,7 +2,7 @@
   "name": "open-blink-vscode-extension-for-windows",
   "displayName": "Open Blink VSCode Extension for Windows",
   "description": "A VSCode extension for Open Blink, Mac version is also available",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "engines": {
     "vscode": "^1.96.0"
   },

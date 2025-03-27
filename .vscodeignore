@@ -17,5 +17,5 @@ vsc-extension-quickstart.md
 .gitignore
 .package_mod.js
 extract/
-resources/
+# resources/
 
