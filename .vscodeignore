@@ -10,8 +10,8 @@ vsc-extension-quickstart.md
 **/*.ts
 **/.vscode-test.*
 
-node_modules/
-!node_modules/@abandonware/
+# node_modules/
+# !node_modules/@abandonware/
 
 .github/
 .gitignore
