@@ -2,7 +2,7 @@
   "name": "open-blink-vscode-extension-for-windows",
   "displayName": "Open Blink VSCode Extension for Windows",
   "description": "A VSCode extension for Open Blink, Mac version is also available",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -36,6 +36,14 @@
       {
         "command": "open-blink-vscode-extension.disconnectDevice",
         "title": "Open Blink: Disconnect Device"
+      },
+      {
+        "command": "open-blink-vscode-extension.selectSourceFile",
+        "title": "Open Blink: Select Source File"
+      },
+      {
+        "command": "open-blink-vscode-extension.saveAndBlink",
+        "title": "Open Blink: Save and Blink"
       }
     ],
     "configuration": {
@@ -50,10 +58,10 @@
     },
     "keybindings": [
       {
-        "command": "open-blink-vscode-extension.compileAndBlink",
+        "command": "open-blink-vscode-extension.saveAndBlink",
         "key": "ctrl+s",
         "mac": "cmd+s",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && resourceExtname == .rb"
       }
     ],
     "viewsContainers": {
@@ -75,7 +83,14 @@
       ]
     },
     "menus": {
-      "view/title": []
+      "view/title": [],
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .rb",
+          "command": "open-blink-vscode-extension.selectSourceFile",
+          "group": "open-blink"
+        }
+      ]
     }
   },
   "scripts": {

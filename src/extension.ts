@@ -50,6 +50,12 @@ let negotiatedMTU = DEFAULT_MTU;
 let statusBarItem: vscode.StatusBarItem;
 let lastCompileTime: number | null = null;
 
+// ソースファイル設定
+let currentSourceFile: string = "app.rb";
+
+// compileAndBlinkコマンドへの参照
+let compileAndBlinkCommand: vscode.Disposable | null = null;
+
 // 設定を読み込む関数
 function loadKeybindingConfig(): string {
   const config = vscode.workspace.getConfiguration('open-blink-vscode-extension');
@@ -219,6 +225,16 @@ class OpenBlinkActionsViewProvider
           }
         )
       );
+
+      // ファイル選択ボタン
+      items.push(new BlinkTreeItem(
+        `Select Source File (${currentSourceFile})`,
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: 'open-blink-vscode-extension.selectSourceFile',
+          title: 'Select Source File'
+        }
+      ));
 
       // コンパイルと書き込みボタン
       items.push(
@@ -757,7 +773,7 @@ export function activate(context: vscode.ExtensionContext) {
         const rootPath = workspaceFolders[0].uri.fsPath;
         const appRbPath = vscode.Uri.joinPath(
           workspaceFolders[0].uri,
-          "app.rb"
+          currentSourceFile
         );
         // Emscripten出力の mrbc.js / mrbc.wasm は resources フォルダに置く想定
         const mrbcJsUri = vscode.Uri.joinPath(
@@ -1162,6 +1178,34 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // compileAndBlinkコマンドへの参照を保存
+  compileAndBlinkCommand = compileAndBlink;
+
+  let saveAndBlink = vscode.commands.registerCommand(
+    "open-blink-vscode-extension.saveAndBlink",
+    async () => {
+      try {
+        // 現在アクティブなエディタを取得
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+          // エディタがアクティブでない場合は何もしない
+          return;
+        }
+        
+        // ファイルを保存
+        await editor.document.save();
+        
+        // セーブ完了後、コンパイルアンドブリンクを実行
+        await vscode.commands.executeCommand('open-blink-vscode-extension.compileAndBlink');
+        
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occurred";
+        vscode.window.showErrorMessage(`Save and Blink error: ${errorMessage}`);
+      }
+    }
+  );
+
   let softReset = vscode.commands.registerCommand(
     "open-blink-vscode-extension.softReset",
     async () => {
@@ -1228,21 +1272,90 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // let helloWorld = vscode.commands.registerCommand(
-  //   "open-blink-vscode-extension.helloWorld",
-  //   () => {
-  //     vscode.window.showInformationMessage(
-  //       "Hello World from Open Blink VSCode IDE!"
-  //     );
-  //     outputChannel.appendLine("Hello World from Open Blink VSCode IDE!");
-  //   }
-  // );
+  let selectSourceFile = vscode.commands.registerCommand(
+    "open-blink-vscode-extension.selectSourceFile",
+    async (fileUri?: vscode.Uri) => {
+      try {
+        // ファイルが右クリックから選択された場合
+        if (fileUri && fileUri.fsPath) {
+          // パスがワークスペースからの相対パスになるように調整
+          const workspaceFolders = vscode.workspace.workspaceFolders;
+          if (workspaceFolders) {
+            const workspaceRoot = workspaceFolders[0].uri.fsPath;
+            let relativePath = fileUri.fsPath;
+            
+            if (relativePath.startsWith(workspaceRoot)) {
+              relativePath = relativePath.substring(workspaceRoot.length + 1); // +1 for the slash
+            }
+            
+            currentSourceFile = relativePath;
+            vscode.window.showInformationMessage(`Source file set to: ${currentSourceFile}`);
+            outputChannel.appendLine(`Source file set to: ${currentSourceFile}`);
+            // TreeViewを更新
+            actionsProvider.refresh();
+            return;
+          }
+        }
+        
+        // それ以外の場合（コマンドパレットから呼び出された場合など）
+        // ワークスペース内の.rbファイルを検索
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+          throw new Error("No workspace is open");
+        }
+        
+        const rubyFiles = await vscode.workspace.findFiles("**/*.rb");
+        
+        if (rubyFiles.length === 0) {
+          vscode.window.showErrorMessage("No Ruby files found in the workspace");
+          return;
+        }
+        
+        // ファイル名の配列を作成（表示用）
+        const fileItems = rubyFiles.map(file => {
+          const workspaceRoot = workspaceFolders[0].uri.fsPath;
+          let relativePath = file.fsPath;
+          
+          if (relativePath.startsWith(workspaceRoot)) {
+            relativePath = relativePath.substring(workspaceRoot.length + 1); // +1 for the slash
+          }
+          
+          return {
+            label: relativePath,
+            description: "",
+            detail: file.fsPath,
+            fullPath: relativePath
+          };
+        });
+        
+        // QuickPickを表示
+        const selectedFile = await vscode.window.showQuickPick(fileItems, {
+          placeHolder: "Select a Ruby file to compile",
+          title: "Select Source File"
+        });
+        
+        if (selectedFile) {
+          currentSourceFile = selectedFile.fullPath;
+          vscode.window.showInformationMessage(`Source file set to: ${currentSourceFile}`);
+          outputChannel.appendLine(`Source file set to: ${currentSourceFile}`);
+          // TreeViewを更新
+          actionsProvider.refresh();
+        }
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        vscode.window.showErrorMessage(`Error selecting file: ${errorMessage}`);
+        outputChannel.appendLine(`Error selecting file: ${errorMessage}`);
+      }
+    }
+  );
 
   context.subscriptions.push(
     connectDevice,
     compileAndBlink,
+    saveAndBlink,
     softReset,
-    disconnectDevice //,
+    disconnectDevice,
+    selectSourceFile//,
     // helloWorld
   );
 }
