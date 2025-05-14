@@ -24,20 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Install Visual Studio Build Tools
-      #   if: matrix.os == 'windows-latest'
-      #   uses: microsoft/setup-msbuild@v2
-
-      # - name: Install Visual Studio C++ Desktop Development
-      #   if: matrix.os == 'windows-latest'
-      #   uses: microsoft/setup-msbuild@v2
-
-      # with:
-      #   components: Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-      #   workload: Microsoft.VisualStudio.Workload.VCTools
-      #   includeRecommended: true
-      #   includeOptional: true
-
+# (Commented-out block related to Visual Studio Build Tools installation removed for clarity)
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
